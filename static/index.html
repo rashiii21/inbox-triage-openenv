@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inbox Triage OpenEnv</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f7f7f7;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    .card {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    input, select, button, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      box-sizing: border-box;
+    }
+    button {
+      cursor: pointer;
+      margin-top: 12px;
+    }
+    pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      background: #111;
+      color: #0f0;
+      padding: 12px;
+      border-radius: 8px;
+      min-height: 120px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Inbox Triage OpenEnv</h1>
+  <p>Simple frontend for your FastAPI environment.</p>
+
+  <div class="card">
+    <h2>Reset</h2>
+    <label for="task_name">Task name</label>
+    <select id="task_name">
+      <option value="easy">easy</option>
+      <option value="medium">medium</option>
+      <option value="hard">hard</option>
+    </select>
+    <button onclick="resetEnv()">Reset</button>
+  </div>
+
+  <div class="card">
+    <h2>Step</h2>
+    <label for="email_id">Email ID</label>
+    <input id="email_id" value="e1" />
+
+    <label for="classification">Classification</label>
+    <select id="classification">
+      <option value="billing">billing</option>
+      <option value="technical">technical</option>
+      <option value="meeting">meeting</option>
+      <option value="spam">spam</option>
+    </select>
+
+    <label for="priority">Priority</label>
+    <select id="priority">
+      <option value="low">low</option>
+      <option value="medium">medium</option>
+      <option value="high">high</option>
+    </select>
+
+    <label for="decision">Decision</label>
+    <select id="decision">
+      <option value="archive">archive</option>
+      <option value="reply">reply</option>
+      <option value="escalate">escalate</option>
+      <option value="schedule">schedule</option>
+    </select>
+
+    <button onclick="stepEnv()">Step</button>
+  </div>
+
+  <div class="card">
+    <h2>State</h2>
+    <button onclick="getState()">Get State</button>
+  </div>
+
+  <div class="card">
+    <h2>Output</h2>
+    <pre id="output">Response will appear here...</pre>
+  </div>
+
+  <script>
+    const output = document.getElementById("output");
+
+    function show(data) {
+      output.textContent = JSON.stringify(data, null, 2);
+    }
+
+    async function resetEnv() {
+      const task_name = document.getElementById("task_name").value;
+      const res = await fetch("/reset", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ task_name })
+      });
+      const data = await res.json();
+      show(data);
+
+      if (data.observation && data.observation.current_email) {
+        document.getElementById("email_id").value = data.observation.current_email.email_id || "";
+      }
+    }
+
+    async function stepEnv() {
+      const payload = {
+        email_id: document.getElementById("email_id").value,
+        classification: document.getElementById("classification").value,
+        priority: document.getElementById("priority").value,
+        decision: document.getElementById("decision").value
+      };
+
+      const res = await fetch("/step", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      show(data);
+    }
+
+    async function getState() {
+      const res = await fetch("/state");
+      const data = await res.json();
+      show(data);
+    }
+  </script>
+</body>
+</html>

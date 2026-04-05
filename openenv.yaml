@@ -1,0 +1,10 @@
+name: inbox-triage-openenv
+description: A beginner-friendly OpenEnv environment for email triage.
+version: 0.1.0
+entrypoint: app.py
+authors:
+  - name: Rashi Shrivastava
+tags:
+  - openenv
+  - email-triage
+  - fastapi
