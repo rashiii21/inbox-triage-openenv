@@ -1,5 +1,12 @@
+<<<<<<< HEAD
 fastapi
 uvicorn
 pydantic
 openai
+=======
+fastapi
+uvicorn
+pydantic
+openai
+>>>>>>> f94e4834fdacd0d3485fb6cabbcdd0cb08d8f285
 requests

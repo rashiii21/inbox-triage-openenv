@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 [project]
 name = "inbox-triage-openenv"
 version = "0.1.0"
@@ -18,4 +19,26 @@ server = "server.app:main"
 
 [build-system]
 requires = ["setuptools>=61.0"]
+=======
+[project]
+name = "inbox-triage-openenv"
+version = "0.1.0"
+description = "A beginner-friendly OpenEnv environment for email triage."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "pydantic",
+    "openai",
+    "requests",
+    "openenv-core>=0.2.0",
+]
+
+[project.scripts]
+server = "server.app:main"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+>>>>>>> f94e4834fdacd0d3485fb6cabbcdd0cb08d8f285
 build-backend = "setuptools.build_meta"
