@@ -1,3 +1,5 @@
+from graders import grade_action
+
 TASKS = {
     "easy": [
         {
@@ -10,6 +12,7 @@ TASKS = {
                 "priority": "high",
                 "decision": "escalate",
             },
+            "grader": grade_action,
         }
     ],
     "medium": [
@@ -23,6 +26,7 @@ TASKS = {
                 "priority": "medium",
                 "decision": "schedule",
             },
+            "grader": grade_action,
         }
     ],
     "hard": [
@@ -36,6 +40,7 @@ TASKS = {
                 "priority": "low",
                 "decision": "archive",
             },
+            "grader": grade_action,
         }
     ],
 }
