@@ -1,82 +1,79 @@
-from models import EmailItem, Observation, Action, StepResult
-from tasks import TASKS
-from graders import grade_action
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+import uvicorn
+
+from models import Action
+from env import InboxTriageEnv
+
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+env = None
 
 
-class InboxTriageEnv:
-    def __init__(self, task_name="easy"):
-        self.task_name = task_name
-        self.task_data = TASKS[task_name]
-        self.index = 0
-        self.completed = []
-        self.done = False
-        self.max_steps = len(self.task_data)
+@app.get("/")
+def home():
+    return FileResponse("static/index.html")
 
-    def reset(self, task_name=None):
-        if task_name:
-            self.task_name = task_name
-            self.task_data = TASKS[task_name]
 
-        self.index = 0
-        self.completed = []
-        self.done = False
-        self.max_steps = len(self.task_data)
-        return self._get_observation()
+@app.post("/reset")
+def reset(payload: dict | None = None):
+    global env
+    try:
+        payload = payload or {}
+        task_name = payload.get("task_name", "easy")
+        env = InboxTriageEnv(task_name=task_name)
+        obs = env.reset(task_name=task_name)
+        return {
+            "observation": obs.model_dump(),
+            "done": False,
+        }
+    except Exception as e:
+        return {"error": str(e)}
 
-    def state(self):
-        return self._get_observation()
 
-    def step(self, action: Action):
-        if self.done:
-            raise ValueError("Episode already finished. Call reset().")
+@app.post("/step")
+def step(action_data: dict):
+    global env
+    try:
+        if env is None:
+            env = InboxTriageEnv(task_name="easy")
+            env.reset(task_name="easy")
 
-        current = self.task_data[self.index]
-        gold = current["gold"]
+        action = Action(**action_data)
+        result = env.step(action)
+        return result.model_dump()
+    except Exception as e:
+        return {"error": str(e)}
 
-        graders = current.get("graders", [])
-        reward = graders[0](action, gold)
-        self.completed.append(current["email_id"])
 
-        self.index += 1
-        if self.index >= len(self.task_data):
-            self.done = True
-            obs = self._final_observation()
-        else:
-            obs = self._get_observation()
+@app.get("/state")
+def state():
+    global env
+    try:
+        if env is None:
+            env = InboxTriageEnv(task_name="easy")
+            env.reset(task_name="easy")
 
-        return StepResult(
-            observation=obs,
-            reward=reward,
-            done=self.done,
-            info={"task_name": self.task_name},
-        )
+        return env.state().model_dump()
+    except Exception as e:
+        return {"error": str(e)}
 
-    def _get_observation(self):
-        current = self.task_data[self.index]
-        return Observation(
-            task_name=self.task_name,
-            current_email=EmailItem(
-                email_id=current["email_id"],
-                sender=current["sender"],
-                subject=current["subject"],
-                body=current["body"],
-            ),
-            step_count=self.index + 1,
-            max_steps=self.max_steps,
-            completed=self.completed,
-        )
 
-    def _final_observation(self):
-        last = self.task_data[-1]
-        return Observation(
-            task_name=self.task_name,
-            current_email=EmailItem(
-                email_id=last["email_id"],
-                sender=last["sender"],
-                subject=last["subject"],
-                body=last["body"],
-            ),
-            step_count=self.max_steps,
-            max_steps=self.max_steps,
-            completed=self.completed,
-        )
+def main():
+    uvicorn.run("app:app", host="0.0.0.0", port=7860)
+
+
+if __name__ == "__main__":
+    main()
