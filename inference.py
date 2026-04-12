@@ -35,3 +35,48 @@ def call_llm(prompt):
     except Exception as e:
         # IMPORTANT: never crash
         return {"error": str(e)}
+    def predict(email):
+    prompt = f"""
+Classify this email and return JSON with:
+classification, priority, decision
+
+Email:
+From: {email['sender']}
+Subject: {email['subject']}
+Body: {email['body']}
+"""
+
+    result = call_llm(prompt)
+
+    try:
+        content = result["choices"][0]["message"]["content"].strip()
+        return json.loads(content)
+    except Exception:
+        # fallback (important to avoid crash)
+        return {
+            "classification": "spam",
+            "priority": "low",
+            "decision": "archive"
+        }
+
+
+def main():
+    # sample email (validator just checks format + API call)
+    email = {
+        "sender": "billing@company.com",
+        "subject": "Payment failed",
+        "body": "Customer payment did not go through."
+    }
+
+    print("[START]")
+
+    action = predict(email)
+
+    print("[STEP]")
+    print(json.dumps(action))
+
+    print("[END]")
+
+
+if __name__ == "__main__":
+    main()
