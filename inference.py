@@ -1,21 +1,37 @@
 import os
-import requests
+import json
+import urllib.request
 
 API_BASE = os.getenv("API_BASE_URL")
 API_KEY = os.getenv("API_KEY")
 
+
 def call_llm(prompt):
-    response = requests.post(
-        f"{API_BASE}/v1/chat/completions",
+    url = f"{API_BASE}/v1/chat/completions"
+
+    payload = {
+        "model": "gpt-4o-mini",
+        "messages": [
+            {"role": "user", "content": prompt}
+        ],
+    }
+
+    data = json.dumps(payload).encode("utf-8")
+
+    req = urllib.request.Request(
+        url,
+        data=data,
         headers={
             "Authorization": f"Bearer {API_KEY}",
             "Content-Type": "application/json",
         },
-        json={
-            "model": "gpt-4o-mini",
-            "messages": [
-                {"role": "user", "content": prompt}
-            ],
-        },
+        method="POST",
     )
-    return response.json()
+
+    try:
+        with urllib.request.urlopen(req) as resp:
+            result = json.loads(resp.read().decode("utf-8"))
+            return result
+    except Exception as e:
+        # IMPORTANT: never crash
+        return {"error": str(e)}
