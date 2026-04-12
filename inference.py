@@ -2,6 +2,7 @@ import os
 import json
 import urllib.request
 
+
 API_BASE = os.getenv("API_BASE_URL")
 API_KEY = os.getenv("API_KEY")
 
@@ -33,11 +34,12 @@ def call_llm(prompt):
             result = json.loads(resp.read().decode("utf-8"))
             return result
     except Exception as e:
-        # IMPORTANT: never crash
         return {"error": str(e)}
-    def predict(email):
+
+
+def predict(email):
     prompt = f"""
-Classify this email and return JSON with:
+Classify this email and return JSON with exactly these keys:
 classification, priority, decision
 
 Email:
@@ -52,7 +54,6 @@ Body: {email['body']}
         content = result["choices"][0]["message"]["content"].strip()
         return json.loads(content)
     except Exception:
-        # fallback (important to avoid crash)
         return {
             "classification": "spam",
             "priority": "low",
@@ -61,7 +62,6 @@ Body: {email['body']}
 
 
 def main():
-    # sample email (validator just checks format + API call)
     email = {
         "sender": "billing@company.com",
         "subject": "Payment failed",
